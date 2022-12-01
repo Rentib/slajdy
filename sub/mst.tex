@@ -1,0 +1,154 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+\section{Minimalne drzewo rozpinające (MST)}
+
+\subsection{Wprowadzenie}
+
+\begin{frame}{\subsecname}{Definicja problemu}
+
+Niech $G$ będzie ważonym grafem nieskierowanym.\\
+Chcemy znaleźć poddrzewo grafu $G$, które łączy wszystkie jego wierzchołki
+(czyli jego drzewo rozpinające) i ma najmniejszą wagę (sumę wszystkich wag krawędzi) ze wszystkich
+możliwych drzew rozpinających. Takie drzewo rozpinające nazywamy minimalnym drzewem rozpinającym (ang. \textit{minimum spanning tree}).
+
+\end{frame}
+
+\begin{frame}{\subsecname}{Przykład}
+  
+\begin{tikzpicture}
+
+\begin{scope}[every node/.style={circle, draw, minimum size = 7.5mm, fill=gray!40}]
+  \node[] (1) at (0,2) {1};
+  \node[] (2) at (3,0) {2};
+  \node[] (3) at (3,4) {3};
+  \node[] (4) at (6,0) {4};
+  \node[] (5) at (6,4) {5};
+  \node[] (6) at (9,2) {6};
+\end{scope}
+
+\graph[edge = {draw, thick}] {
+  (1) -- [edge label = 9, alt=<2>{transparent}] (3) 
+      -- [edge label = 5, alt=<2>{transparent}] (5) 
+      -- [edge label = 8, alt=<2>{transparent}] (6);
+  (1) -- [edge label = 4]
+  (2) -- [edge label = 2] (4)
+      -- [edge label = 7] (6);
+  (3) -- [edge label = 3, alt=<2>{transparent}] (4)
+      -- [edge label = 3] (5);
+  (3) -- [edge label = 1] (2);
+};
+
+\end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}{\subsecname}{Właściwości}
+
+\begin{itemize}
+  \pause\item
+    Jeżeli wszystkie wagi krawędzi są różne, to istnieje tylko jedno MST, w przeciwnym razie
+    możliwe jest istnienie wielu.
+  \pause\item
+    MST jest także drzewem rozpinającym o najmniejszym iloczynie wag krawędzi
+    (prosty dowód poprzez zamianę wag na ich logarytmy).
+  \pause\item
+    Największa waga krawędzi w MST jest najmniejsza spośród wszystkich maksymalnych wag
+    krawędzi wszystkich możliwych drzew rozpinających.
+  \pause\item
+    Maksymalne drzewo rozpinające może zostać uzyskane tak samo jak MST, wystarczy 
+    zamienić wagi krawędzi na ujemne.
+\end{itemize}
+
+\end{frame}
+
+\subsection{Algorytm Kruskala}
+
+\begin{frame}{\subsecname}
+
+Twórcą algorytmu jest Joseph Bernard Kruskal. Algorytm jest bardzo prosty w działaniu:
+\begin{enumerate}
+  \pause\item sortujemy krawędzie niemalejąco według wag;
+  \pause\item przeglądamy krawędzie od najlżejszych i zachłannie dodajemy do wyniku te, które łączą dwa do tej pory niepołączone wierzchołki.
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}{\subsecname}{Przykład działania}
+\begin{tikzpicture}
+
+\begin{scope}[every node/.style={circle, draw, fill=gray!40}]
+  \node[] (1) at (0,1) {1};
+  \node[] (2) at (1,0) {2};
+  \node[] (3) at (1,2) {3};
+  \node[] (4) at (3,0) {4};
+  \node[] (5) at (3,2) {5};
+  \node[] (6) at (4,1) {6};
+
+  \node[] (n1) at (6,1) {1};
+  \node[] (n2) at (7,0) {2};
+  \node[] (n3) at (7,2) {3};
+  \node[] (n4) at (8,0) {4};
+  \node[] (n5) at (8,2) {5};
+  \node[] (n6) at (9,1) {6};
+\end{scope}
+
+\graph[edge = {draw, thick}] {
+  (1) -- [edge label = 9, alt=<15>{red}] (3) 
+      -- [edge label = 5, alt=<11>{red}] (5) 
+      -- [edge label = 8, alt=<14>{red}] (6);
+  (1) -- [edge label = 4, alt=<9>{red}] (2) 
+      -- [edge label = 2, alt=<4>{red}] (4)
+      -- [edge label = 7, alt=<12>{red}] (6);
+  (3) -- [edge label = 3, alt=<8>{red}] (4)
+      -- [edge label = 3, alt=<6>{red}] (5);
+  (3) -- [edge label = 1, alt=<2>{red}] (2);
+};
+
+\only<3->\path[draw, thick] (n3) -- (n2);
+\only<5->\path[draw, thick] (n2) -- (n4);
+\only<7->\path[draw, thick] (n4) -- (n5);
+\only<10->\path[draw, thick] (n1) -- (n2);
+\only<13->\path[draw, thick] (n4) -- (n6);
+
+\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{\subsecname}{Dowód poprawności}
+
+Niech $G$ będzie spójnym ważonym grafem, a $T$ będzie podgrafem $G$ wyprodukowanym, przez algorytm. 
+\pause
+$T$ nie może zawierać cyklu, gdyż z definicji wynika, że krawędzie tworzące cykl nie są dodawane. 
+$T$ musi być spójne, gdyż każda napotykana krawędź łącząca dwie składowe $T$ zostaje do niego 
+dodana. Zatem $T$ jest drzewem rozpinającym grafu $G$.\\
+\pause
+Dowód minimalności $T$ robi się indukcyjnie pokazując, że w każdym momencie algorytmu zbiór $F$
+krawędzi $T$ zawiera się w zbiorze krawędzi pewnego z minimalnych drzew rozpinających grafu $G$.
+Baza indukcyjna jest trywialna ($F = \varnothing$). 
+\pause
+Krok pozostawiam jako ćwiczenie.
+
+\end{frame}
+
+\begin{frame}[fragile]{\subsecname}
+
+\begin{block}{}
+\begin{lstlisting}[language = C++]
+  struct krawedz {
+    int v, u; long long w;
+    bool operator<(krawedz e) { return w < e.w; }
+  }; |\pause|
+  ...
+  sort(krawedzie.begin(), krawedzie.end());
+  for (auto e : krawedzie) {
+    if (polaczone(e.v, e.u)) continue;
+    polacz(e.v, e.u);
+    wynik.emplace_back(e);
+  }
+\end{lstlisting}
+\end{block}
+
+\end{frame}
+
+\end{document}

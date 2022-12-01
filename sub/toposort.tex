@@ -1,0 +1,79 @@
+\documentclass[../main.tex]{subfiles}
+\usepackage[polish]{babel}
+
+\begin{document}
+
+\section{Sortowanie topologiczne (Toposort)}
+
+\subsection{Wprowadzenie}
+
+\begin{frame}{\subsecname}{Definicja problemu}
+
+Dany jest graf skierowany $G = \langle V, E \rangle$.
+Należy znaleźć taki porządek wierzchołków, aby każda krawędź prowadziła z wierzchołka
+o mniejszym indeksie do wierzchołka z większym.\\
+Innymi słowy, chcemy znaleźć taką permutację wierzchołków (porządek topologiczny),
+który odpowiada porządkowi zdefiniowanemu przez krawędzie (jeśli istnieje krawędź z wierzchołka $v$ do wierzchołka $u$, to $v$ powinno być przed $u$).
+
+\end{frame}
+
+\begin{frame}[fragile]{\subsecname}{Przykład}
+
+\begin{tikzpicture}
+
+\begin{scope}[every node/.style={circle, draw, minimum size = 7.5mm, fill=gray!40}]
+  \node[] (1) at (2,2) {\only<2>{1}};
+  \node[] (2) at (4,2) {\only<2>{2}};
+  \node[] (3) at (1,0) {\only<2>{4}};
+  \node[] (4) at (3,0) {\only<2>{3}};
+  \node[] (5) at (5,0) {\only<2>{5}};
+\end{scope}
+
+\graph[edge = {draw, thick}] {
+  (1) -> { (2), (3), (4) },
+  (2) -> { (4), (5) },
+  (3) -> {},
+  (4) -> { (3) },
+  (5) -> {},
+};
+
+\end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}{\subsecname}
+
+Warto zauważyć, że może istnieć wiele możliwych porządków topologicznych, lub może też nie
+istnieć żaden. Wiele poprawnych porządków topologicznych widać choćby na pokazanym przykładzie,
+natomiast porządek topologiczny nie istnieje, gdy w grafie istnieje cykl.
+
+\end{frame}
+
+\subsection{Algorytm}
+
+\begin{frame}[fragile]{\subsecname}
+
+Aby rozwiązać problem, najłatwiej jest użyć przeszukiwania w głąb.
+Przypuśćmy, że dany graf jest acykliczny. Będziemy tworzyli listę, na której początek będziemy
+dodawali wierzchołki, z których wychodzi DFS.
+
+\pause
+\begin{block}{}
+\begin{lstlisting}[language = C++]
+vector<int> toposort; // odwrotna kolejnosc
+void dfs(int v) {
+  visited[v] = true;
+  for (auto u : G[v]) {
+    if (!visited[u])
+      dfs(v);
+  }
+  toposort.emplace_back(v);
+}
+...
+reverse(toposort.begin(), toposort.end());
+\end{lstlisting}
+\end{block}
+
+\end{frame}
+
+\end{document}

@@ -1,0 +1,132 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+\section{Drzewa przedziałowe}
+
+\subsection{Drzewa przedział-punkt}
+
+\begin{frame}{\subsecname}{Wprowadzenie}
+
+Dany jest ciąg $c_n$ i łączna, dwuargumentowa operacja $\diamond$.
+Łączna to taka, że $a\diamond (b\diamond c) = (a\diamond b)\diamond c$.
+Mamy wykonać na tym ciągu operacje postaci:
+\begin{itemize}
+  \item zmień $c_i$ w $x$;
+  \item podaj wynik na przedziale $[l,r]$, czyli $c_l \diamond c_{l+1} \diamond ... \diamond c_r$.
+\end{itemize}
+Drzewa przedziałowe są strukturą pozwalającą na wykonywanie tych operacji
+w czasie $O(\log{n})$.
+
+\end{frame}
+
+\begin{frame}{\subsecname}{Pomysł}
+
+Zbudujemy na ciągu $c_n$ pełne drzewo binarne (jeśli trzeba, to dopiszemy elementy neutralne
+operacji $\diamond$, aby było $2^k$ liści). Drzewo będzie przechowywane w tablicy $tree$,
+zdefiniowanej w następujący sposób:
+\[
+  \textit{tree}[v] =
+    \begin{cases}
+      c_{v-leafs} &\text{gdy } v \ge leafs;\\
+      tree[2v] \diamond tree[2v+1] &\text{w przeciwnym przypadku}.
+    \end{cases}
+\]
+Wiemy wówczas, że $tree[v]$ trzyma wynik operacji $\diamond$ wykonanej na wszystkich liściach
+poddrzewa wierzchołka $v$, a w szczególności $tree[1] = c_1 \diamond c_2 \diamond ... \diamond c_n$,
+gdyż liście które sztucznie dodamy zawierają elementy neutralne $e_\diamond$, a oczywiście
+$x \diamond e_\diamond = x$ dla każdego $x$ z dziedziny.
+
+\end{frame}
+
+\begin{frame}{\subsecname}{Struktura}
+
+Dla ciągu $7$-elementowego drzewo mogło by wyglądać w następujący sposób.\pause
+
+\begin{tikzpicture}
+
+\begin{scope}[every node/.style={circle,draw,minimum size=7.5mm,fill=gray!40}]
+  \node[] (1) at (5.0, 4.5) {1};
+  \node[] (2) at (2.142857142857143, 3.0) {2};
+  \node[] (3) at (7.857142857142857, 3.0) {3};
+  \node[] (4) at (0.7142857142857143, 1.5) {4};
+  \node[] (5) at (3.571428571428571, 1.5) {5};
+  \node[] (6) at (6.428571428571429, 1.5) {6};
+  \node[] (7) at (9.285714285714285, 1.5) {7};
+  \node[label=below:$c_1$] (8) at (0.0, 0.0) {8};
+  \node[label=below:$c_2$] (9) at (1.4285714285714286, 0.0) {9};
+  \node[label=below:$c_3$] (10) at (2.857142857142857, 0.0) {10};
+  \node[label=below:$c_4$] (11) at (4.285714285714286, 0.0) {11};
+  \node[label=below:$c_5$] (12) at (5.714285714285714, 0.0) {12};
+  \node[label=below:$c_6$] (13) at (7.142857142857143, 0.0) {13};
+  \node[label=below:$c_7$] (14) at (8.571428571428571, 0.0) {14};
+  \node[label=below:$e_\diamond$] (15) at (10.0, 0.0) {15};
+\end{scope}
+
+\graph[edge={draw,thick}]{
+  (1) -- {(2), (3)},
+  (2) -- {(4), (5)},
+  (3) -- {(6), (7)},
+  (4) -- {(8), (9)},
+  (5) -- {(10), (11)},
+  (6) -- {(12), (13)},
+  (7) -- {(14), (15)},
+};
+
+\end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}{\subsecname}{Struktura}
+
+\begin{block}{Aktualizacja}
+  Jeśli chcemy zmienić $c_i$, to zmieniamy odpowiadający mu liść.
+  Po aktualizacji wartości wierzchołka $v$ należy zaktualizować wartość jego ojca -- wierzchołek
+  $\lfloor\frac{v}{2}\rfloor$.
+\end{block}
+
+\begin{block}{Zapytanie}
+  Aby odpowiedzieć na zapytanie postaci $[l,r]$ należy wyznaczyć wierzchołki bazowe przedziału --
+  wierzchołki, których przedział zawiera się w $[l,r]$, a przedział ich ojca nie. Wynikiem jest 
+  $tree[b_1] \diamond ... \diamond tree[b_k]$, gdzie ciąg $b_k$, to wyznaczony ciąg wierzchołków
+  bazowych.
+\end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]{\subsecname}{Implementacja}
+
+\begin{block}{}
+\begin{lstlisting}[language = C++]
+  void update(int v, T x) {
+    tree[(v += M - 1)] = x;
+    while ((v /= 2))
+      tree[v] = tree[v * 2] $\diamond$ tree[v * 2 + 1];
+  }
+\end{lstlisting}
+\end{block}
+
+\begin{block}{}
+\begin{lstlisting}[language = C++]
+  T zapytanie(int l, int r, T res = $e_\diamond$) {
+    for (l += leafs - 1, r += leafs - 1; l <= r; ) {
+      if (l % 2 == 1) res = res $\diamond$ tree[l++];
+      if (r % 2 == 0) res = res $\diamond$ tree[r--];
+      l /= 2, r /= 2;
+    }
+    return res;
+  }
+\end{lstlisting}
+\end{block}
+
+\end{frame}
+
+\subsection{Drzewa przedział-przedział}
+
+\begin{frame}{\subsecname}{Wprowadzenie}
+
+TODO
+
+\end{frame}
+
+\end{document}

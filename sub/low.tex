@@ -1,0 +1,121 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+\section{Parametr low (mosty i punkty artykulacji)}
+
+\subsection{Wprowadzenie}
+
+\begin{frame}{\subsecname}{Definicja problemu}
+
+Dany jest nieskierowany graf $G = \langle V, E \rangle$.
+Naszym zadaniem jest wyznaczenie wszystkich krawędzi, których usunięcie zwiększa liczbę
+spójnych składowych $G$.
+
+\end{frame}
+
+\begin{frame}{\subsecname}{Przykład}
+
+\begin{tikzpicture}
+  
+  \begin{scope}[every node/.style={circle, draw, minimum size = 7.5mm, fill=gray!40}]
+    \node[] (1) at (4.1, 7.5) {1}; 
+    \node[] (2) at (6.2, 8.0) {2}; 
+    \node[] (3) at (5.8, 6.6) {3}; 
+    \node[] (4) at (7.5, 6.7) {4}; 
+    \node[] (5) at (7.2, 5.3) {5}; 
+    \node[] (6) at (9.8, 7.3) {6}; 
+    \node[] (7) at (10, 9.4) {7}; 
+    \node[] (8) at (8.7, 10.9) {8}; 
+    \node[] (9) at (7.1, 9.7) {9}; 
+    \node[] (10) at (2.5, 5.9) {10}; 
+    \node[] (11) at (1.6, 7.9) {11}; 
+    \node[] (12) at (0.1, 8.2) {12}; 
+    \node[] (13) at (0.0, 9.8) {13}; 
+    \node[] (14) at (1.5, 9.3) {14}; 
+  \end{scope}
+
+  \graph[edge={draw, thick}] {
+    (1) --[alt=<2>{red}] (2),
+    (2) --[alt=<2>{red}] (3),
+    (2) -- (4),
+    (4) --[alt=<2>{red}] (5),
+    (4) -- (6),
+    (6) -- (7),
+    (7) -- (8),
+    (8) -- (9),
+    (7) -- (9),
+    (9) -- (2),
+    (1) --[alt=<2>{red}] (10),
+    (13) -- (14),
+    (14) -- (11),
+    (10) --[alt=<2>{red}] (11),
+    (11) -- (12),
+    (12) -- (13),
+  };
+
+\end{tikzpicture}
+
+\end{frame}
+
+\subsection{Algorytm}
+
+\begin{frame}{\subsecname}
+
+  Wybierzmy dowolny wierzchołek \textit{root} i odpalmy na nim \textit{DFS}-a.
+  Łatwo jest udowodnić następujący fakt:
+
+  \begin{itemize}
+    \pause\item
+      Powiedzmy, że jesteśmy w wierzchołku $v$. Krawędź $(v, u)$, gdzie $u$ jest synem $v$ w
+      drzewie DFS, jest mostem wtedy i tylko wtedy, gdy żaden z wierzchołków poddrzewa DFS
+      wierzchołka $u$ nie ma krawędzi wstecznej do $v$ lub jego przodka w drzewie DFS.
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}{\subsecname}
+
+  Oznaczmy czas wejścia (preorder) wierzchołka $v$ poprzez \textit{tin}$[v]$.\\
+  \pause\[
+    \textit{low}[v] = \min
+    \begin{cases}
+      \textit{tin}[v]\\
+      \textit{tin}[p] &\forall\text{$p$ takich, że krawędź $(v,p)$ jest wsteczna}\\
+      \textit{low}[u] &\forall\text{$u$ takich, że krawędź $(v,u)$ jest w drzewie}\\
+    \end{cases}
+  \]\pause
+  Przy tak zdefiniowanej funkcji \textit{low} krawędź $(v, u)$ w drzewie DFS jest mostem wtedy
+  i tylko wtedy, gdy $\textit{tin}[v] < \textit{low}[u]$.\\
+
+  Złożoność algorytmu jest oczywiście taka jak złożoność \textit{DFS}-a, czyli $O(n + m)$.
+
+\end{frame}
+
+\begin{frame}[fragile]{\subsecname}{Implementacja}
+
+\begin{block}{}
+\begin{lstlisting}[language = C++]
+  vector<int> G[MAX_N];
+  bool visited[MAX_N];
+  int low[MAX_N], tin[MAX_N], timer = 0;
+  void dfs(int v, int p = -1) {
+    visited[v] = true;
+    tin[v] = low[v] = ++timer;
+    for (auto u : G[v]) {
+      if (u == p) continue;
+      if (visited[u]) {
+        low[v] = min(low[v], tin[u]);
+      } else {
+        dfs(u, v);
+        low[v] = min(low[v], low[u]);
+        if (tin[v] < low[u]) JEST_MOSTEM(v, u);
+      }
+    }
+  }
+\end{lstlisting}
+\end{block}
+
+\end{frame}
+
+\end{document}

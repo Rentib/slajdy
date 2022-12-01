@@ -1,0 +1,163 @@
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+\section{Najniższy wspólny przodek (LCA)}
+
+\subsection{Wprowadzenie}
+
+\begin{frame}{\subsecname}{Definicja problemu}
+Niech $G$ będzie drzewem.\\
+Dla każdego zapytania typu $(v,u)$ chcemy znaleźć najniższego wspólnego przodka 
+wierzchołka $v$ i wierzchołka $u$, czyli taki wierzchołek $w$, że należy on do ścieżki z $v$
+do korzenia i ścieżki z $u$ do korzenia. Jeśli istnieje wiele takich wierzchołków, to chcemy
+wyznaczyć ten najodleglejszy od korzenia drzewa.
+\end{frame}
+
+\begin{frame}{\subsecname}{Przykład}
+
+\begin{tikzpicture}
+
+\begin{scope}[every node/.style={circle, draw, minimum size = 7.5mm, fill=gray!40}]
+  \node[alt=<4>{fill=pink}] (1) at (5,6) {1};
+  \node[alt=<4-5>{fill=pink}] (2) at (3,4) {2};
+  \node[] (3) at (7,4) {3};
+  \node[] (4) at (1.5,2) {4};
+  \node[alt=<2-5>{fill=magenta}] (5) at (4,2) {5};
+  \node[] (6) at (6,2) {6};
+  \node[] (7) at (7,2) {7};
+  \node[] (8) at (8,2) {8};
+  \node[] (9) at (.5,0) {9};
+  \node[alt=<2-5>{fill=orange}] (10) at (2.5,0) {10};
+\end{scope}
+
+\graph[edge = {draw, thick}] {
+  (1) -- { (2), (3) },
+  (2) -- { (4), (5) },
+  (3) -- { (6), (7), (8) },
+  (4) -- { (9), (10) },
+};
+
+\only<3-4>\graph[edge = {thick, orange, bend left}] {
+  (10) -> (4) -> (2) -> (1),
+};
+
+\only<3-4>\graph[edge = {thick, magenta, bend right}] {
+  (5) -> (2) -> (1),
+};
+
+\end{tikzpicture}
+
+\end{frame}
+
+\subsection{Naiwne podejście}
+
+\begin{frame}[fragile]{\subsecname}
+Oczywistym rozwiązaniem byłoby skakanie do ojca z niższego z wierzchołków $v$ i $u$.
+
+\pause
+
+\begin{block}{}
+\begin{lstlisting}[language=C++]
+  while (v != u) {
+    if (glebokosc(v) > glebokosc(u))
+      v = ojciec[v];
+    else
+      u = ojciec[u];
+  }
+  return v;
+\end{lstlisting}
+\end{block}
+
+\pause
+
+Takie rozwiązanie jest jednak zbyt wolne i w pesymistycznym przypadku wykonuje
+$O(n)$ operacji.
+
+\end{frame}
+
+\begin{frame}[fragile]{\subsecname}
+Nasz naiwny algorytm można z łatwością usprawnić.\\
+\pause
+Nie musimy skakać dwoma wierzchołkami. Wystarczy, że będziemy skakać jednym z nich, dopóki
+nie doskoczymy do przodka drugiego wierzchołka.
+\pause
+\begin{block}{}
+\begin{lstlisting}[language=C++]
+  while (!jest_przodkiem(v, u))
+    v = ojciec[v];
+  return v;
+\end{lstlisting}
+\end{block}
+
+\end{frame}
+
+\subsection{Binary lifting}
+
+\begin{frame}[fragile]{\subsecname}
+Jedyną wadą poprzedniego algorytmu było to, że skakaliśmy za każdym razem o tylko $1$
+wierzchołek w górę. \pause Aby pozbyć się tego problemu, możemy skakać o kilka -- na przykład 
+$2^k$ -- wierzchołków w górę.
+
+\pause
+\begin{block}{}
+\begin{lstlisting}[language=C++]
+  while (!jest_przodkiem(v, u))
+    v = skocz_o_kilka(v);
+  return v;
+\end{lstlisting}
+\end{block}
+
+\pause
+Tutaj pojawiają się $2$ problemy:
+\begin{enumerate}
+  \pause\item nie mamy zdefiniowanej funkcji do skakania;
+  \pause\item nie kontrolujemy długości skoku (możemy skoczyć za daleko).
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}[fragile]{\subsecname}
+Jako jedno z rozwiązań uprzednio wspomnianych poprzednio problemów proponuję takie rozwiązanie.
+Skaczemy wierzchołkiem $v$ do najniższego wierzchołka niebędącego przodkiem $u$.\\
+Ojcem takiego wierzchołka będzie $LCA(v, u)$.\\
+Jeśli chodzi o długość skoków, to będziemy skakać o coraz mniejsze potęgi dwójki -- można w ten sposób uzyskać dowolną liczbę.
+\pause
+
+\begin{block}{}
+\begin{lstlisting}[language=C++]
+  for (int skok = LOG_N; --skok >= 0;)
+    if (!jest_przodkiem(ojciec[v][skok], u))
+      v = ojciec[v][skok];
+  return ojciec[v][0];
+\end{lstlisting}
+\end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]{\subsecname}
+Pozostaje nam wyznaczać szybko wartości funkcji \lstinline{ojciec}.\pause
+Można łatwo ją spreprocesować wykonując \lstinline{dfs}-a z korzenia drzewa.
+
+\begin{block}{}
+\begin{lstlisting}[language=C++]
+  int ojciec[MAX_N][LOG_N];
+  void dfs(int v, int p) {
+    visited[v] = true;
+    ojciec[v][0] = p;
+    for (int skok = 1; skok < LOG_N; skok++) {
+      int u = ojciec[v][skok - 1];
+      ojciec[v][skok] = ojciec[u][skok - 1];
+    }
+    for (auto u : G[v])
+      if (!visited[u])
+        dfs(u, v);
+  }
+\end{lstlisting}
+\end{block}
+\pause
+Takie rozwiązanie okazuje się już być wystarczająco szybkie i pozwala na odpowiadanie na zapytania w złożoności $O(\log{n})$.
+
+\end{frame}
+
+\end{document}

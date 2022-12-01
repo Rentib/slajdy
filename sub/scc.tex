@@ -1,0 +1,168 @@
+\documentclass[../main.tex]{subfiles}
+\usepackage[polish]{babel}
+
+\begin{document}
+
+\section{Silnie spójne składowe (SCC)}
+
+\subsection{Wprowadzenie}
+
+\begin{frame}{\subsecname}{Definicja problemu}
+
+Dany jest skierowany graf $G = \langle V, E \rangle$.
+Mogą istnieć w nim pętle i krawędzie wielokrotne.
+Silnie spójna składowa to maksymalny podzbiór wierzchołków $C$, taki że między każdą parą jego
+wierzchołków istnieje ścieżka ($\forall_{v,u \in C} v \rightsquigarrow u \land u 	\rightsquigarrow v$).\\
+\pause
+Jest oczywiste, że dwie silnie spójne składowe grafu $G$ są rozłączne, inaczej nie byłyby to
+maksymalne podzbiory. Możemy w takim razie stworzyć nowy graf $G^{SCC}$, w którym
+wierzchołki to będą silnie spójne składowe $G$. Graf silnie spójnych składowych jest acykliczny,
+ponieważ jeśli istniałby cykl, to nie byłyby to maksymalne podgrafy.
+
+\end{frame}
+
+\begin{frame}[fragile]{Przykład}
+\begin{tikzpicture}
+
+  \begin{scope}[every node/.style={circle, draw, minimum size = 7.5mm, fill=gray!40}]
+    \node (1) at (0,5.5) {1};
+    \node (2) at (3,5) {2};
+    \node (3) at (4,4) {3};
+    \node (4) at (1,3.5) {4};
+    \node (5) at (7,5) {5};
+    \node (6) at (7,4) {6};
+    \node (7) at (4,2) {7};
+    \node (8) at (6,2) {8};
+    \node (9) at (2,1) {9};
+    \node (10) at (4,0) {10};
+    \node (11) at (6,0) {11};
+    \node (12) at (7,1) {12};
+  \end{scope}
+
+  \graph[multi, edge={draw, thick}] {
+    (2) -> (1),
+    (2) -> [bend left] (3),
+    (3) -> [bend left] (2),
+    (4) -> (2),
+    (5) -> (2),
+    (5) -> [bend left]( 6),
+    (6) -> (3),
+    (6) -> [bend left] (5),
+    (7) -> {(3), (9)},
+    (8) -> {(6), (7)},
+    (9) -> (10),
+    (10) -> {(7), (11)},
+    (11) -> (12),
+    (12) -> (8),
+  };
+
+  \pause
+  \begin{scope}[every node/.style={draw, dashed, gray, rounded rectangle}]
+    \node[fit=(1)]{};
+    \node[fit=(4)]{};
+    \node[fit=(2)(3)]{};
+    \node[fit=(5)(6)]{};
+    \node[fit=(7)(8)(9)(10)(11)(12)]{};
+  \end{scope}
+
+\end{tikzpicture}
+\end{frame}
+
+\subsection{Algorytm Kosaraju}
+
+\begin{frame}{\subsecname}{Obserwacja}
+Niech $SCC[G] = \left\{S_1, S_2, ..., S_s\right\}$ będzie rodziną zbiorów wierzchołków grafu $G$
+takich, że wierzchołki z jednego zbioru tworzą silnie spójną składową.
+Niech $\psi(S_i) = \max\left\{tout(v) | v \in S_i\right\}$.
+Niech $A, B \in SCC[G]$. Wtedy
+$$
+  \forall_{A,B\in SCC[G], A \neq B} \psi(A) < \psi(B) \implies \neg\exists A \rightsquigarrow B.
+$$
+Niech $G^T$ będzie grafem transponowanym $G$, czyli grafem z odwróconymi zwrotami krawędzi.
+Wtedy
+$$
+  SCC[G] = SCC[G^T].
+$$
+Dowody obu obserwacji są dość łatwe i pozostawiam je jako ćwiczenie.
+
+\end{frame}
+
+\begin{frame}{\subsecname}
+
+Algorytm zaproponowany przez Kosaraju opiera się w głównej mierze na powyższych obserwacjach i 
+wygląda tak:
+\begin{enumerate}
+  \item wyznaczamy czasy wyjścia wierzchołków $G$;
+  \item wywołujemy DFS dla $G^T$ w kolejności malejących czasów wyjścia.
+        Wszystkie wierzchołki w jednym drzewie przeszukiwania w głąb należą do
+        jednej silnie spójnej składowej.
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}[fragile]{\subsecname}{Wyznaczanie kolejności}
+
+\begin{block}{}
+\begin{lstlisting}[language = C++]
+vector<int> G[MAX_N], Gt[MAX_N];
+bool visited[MAX_N];
+vector<int> order;
+void dfs1(int v) {
+  visited[v] = true;
+  for (auto u : G[v])
+    if (!visited[u])
+      dfs1(u);
+  order.emplace_back(v);
+}
+...
+for (int v = 1; v <= n; v++)
+  if (!visited[v])
+    dfs1(v);
+\end{lstlisting}
+\end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]{\subsecname}
+
+\begin{block}{}
+\begin{lstlisting}[language = C++]
+int scc[MAX_N], counter = 0;
+void dfs2(int v) {
+  scc[v] = counter;
+  for (auto u : Gt[v])
+    if (scc[u] == 0)
+      dfs2(u);
+}
+...
+reverse(order.begin(), order.end());
+for (auto v : order) {
+  if (!scc[v]) {
+    counter++;
+    dfs2(v);
+  }
+}
+\end{lstlisting}
+\end{block}
+
+\end{frame}
+\subsection{Graf silnie spójnych składowych (Condensation graph)}
+
+\begin{frame}[fragile]{\subsecname}
+
+\begin{block}{}
+\begin{lstlisting}[language = C++]
+vector<int> Gscc[counter + 7];
+for (int v = 1; v <= n; v++) {
+  for (auto u : G[v])
+    Gscc[scc[v]].emplace_back(scc[u]);
+}
+\end{lstlisting}
+\end{block}
+\pause
+Warto zauważyć, że przy takiej implementacji możliwe jest istnienie bardzo wielu wtórnych krawędzi.
+To jednak z reguły nie jest problemem (przynajmniej w zadaniach konkursowych).
+
+\end{frame}
+
+\end{document}

@@ -1,0 +1,115 @@
+\documentclass[../main.tex]{subfiles}
+\usepackage[polish]{babel}
+
+\begin{document}
+
+\section{Najlżejsze (najkrótsze) ścieżki}
+
+\subsection{Wprowadzenie}
+
+\begin{frame}{\subsecname}{Definicja problemu}
+
+Dany jest spójny, ważony graf $G = \langle V, E \rangle$ i wyróżniony wierzchołek $s\in V$.
+Wszystkie wagi krawędzi są nieujemne.
+Naszym zadaniem jest znalezienie dla każdego wierzchołka $v\in V$ najlżejszej
+ścieżki $s \rightsquigarrow v$, gdzie wagę ścieżki definiujemy jako sumę wag jej krawędzi.
+
+\end{frame}
+
+\begin{frame}[fragile]{\subsecname}{Przykład}
+
+\begin{tikzpicture}
+
+  \begin{scope}[every node/.style={circle, draw, minimum size = 7.5mm, fill=gray!40}]
+    \node[fill=gray] (1) at (0.7, 13.7) {1}; 
+    \node[] (2) at (0.0, 10.5) {2}; 
+    \node[] (3) at (2.9, 12.3) {3}; 
+    \node[] (4) at (2.8, 9.3) {4}; 
+    \node[] (5) at (6.5, 13.4) {5}; 
+    \node[] (6) at (5.6, 10.4) {6}; 
+    \node[] (7) at (9.4, 10.5) {7}; 
+    \node[] (8) at (7.1, 8.9) {8}; 
+    \node[] (9) at (10.0, 12.8) {9}; 
+  \end{scope}
+
+  \graph[edge={draw, thick}] {
+    (1) -> [edge label={9}] (3),
+    (1) -> [edge label={2}, alt=<2>{red}] (2),
+    (2) -> [edge label={4}] (3),
+    (2) -> [edge label={1}, alt=<2>{red}] (4),
+    (3) -> [edge label={1}, alt=<2>{red}] (5),
+    (4) -> [edge label={4}] (3),
+    (6) -> [edge label={1}, alt=<2>{red}] (3),
+    (4) -> [edge label={1}, alt=<2>{red}] (6),
+    (5) -> [edge label={2}, alt=<2>{red}] (9),
+    (5) -> [edge label={7}] (6),
+    (5) -> [edge label={1}] (1),
+    (6) -> [edge label={2}, alt=<2>{red}] (8),
+    (6) -> [edge label={9}] (7),
+    (8) -> [edge label={2}, alt=<2>{red}] (7),
+    (7) -> [edge label={1}] (9),
+    (4) -> [edge label={5}] (8),
+  };
+\end{tikzpicture}
+
+\end{frame}
+
+\subsection{Algorytm Dijkstry}
+
+\begin{frame}{\subsecname}
+
+Zacznijmy od kilku definicji:
+\begin{itemize}
+  \item $w^*(v) = $ waga najlżejszej ścieżki $s\rightsquigarrow v$;
+  \item $w'(v) = $ waga najlżejszej dotychczas znalezionej ścieżki $s\rightsquigarrow v$;
+  \item $L = \{ v \in V \big| w^*(v) = w'(v) \}$, $R = V \setminus L$.
+\end{itemize}
+\pause
+Zachodzi następujący niezmiennik:
+\begin{itemize}
+  \item $V = L\cup R$;
+  \item $s \in L$;
+  \item $\forall_{u\in L, v\in R} w'(u) = w^*(u) \le w^*(v)$;
+  \item $\forall_{v\in R} w'(v) = \min\{w^*(u) + w(\{u,v\}) \big| u\in L, \{u,v\}\in E\}\cup\{\infty\}$;
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{\subsecname}
+
+Algorytm, który Edsger W. Dijkstra zaproponował w 1959 roku wygląda w następujący sposób:\\
+\pause
+Dopóki $R \neq \varnothing$:
+\begin{itemize}
+  \pause\item wybieramy wierzchołek $v \in R$ o najmniejszym $w'$;
+  \pause\item odejmujemy go od zbioru $R$ i dodajemy do zbioru $L$;
+  \pause\item dla każdego jego sąsiada $u \in R$ ustawiamy $w'(u) = \min(w'(u), w^*(v) + w(\{v,u\}))$.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{\subsecname}{Implementacja}
+
+\begin{block}{}
+\begin{lstlisting}[language = C++]
+  struct myPair { 
+    int v, w;
+    bool operator>(myPair &p) { return w < p.w; }
+  };
+  ...
+  priority_queue<myPair> R({{s, 0}});
+  while (!R.empty()) {
+    myPair v = R.top(); R.pop();
+    for (int u : G[v]) {
+      if (v.w + u.second < w[u.first]) {
+        w[u.first] = v.w + u.second;
+        R.push({u.first, w[u.first]});
+      }
+    }
+  }
+\end{lstlisting}
+\end{block}
+
+\end{frame}
+
+\end{document}

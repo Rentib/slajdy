@@ -1,0 +1,57 @@
+\documentclass[11pt]{beamer}
+
+\usepackage[polish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{subfiles}
+\usepackage{mathtools}                       % matma
+\usepackage{amsfonts,amsmath,amssymb,amsthm} % matma
+\usepackage{listings}                        % załączanie kodu źródłowego
+\usepackage{tikz}                            % rysowanie i grafy https://tikz.dev/tikz, https://centrality.mimuw.edu.pl/editor
+\usepackage{binarytree}
+
+\title{Koło informatyczne Władysława IV}
+\author{Stanisław Bitner}
+\date{listopad 2022}
+
+\usetheme{Warsaw}
+\usecolortheme{orchid}
+% \usefonttheme{}
+% \useinnertheme{}
+% \useoutertheme{}
+
+\setbeamertemplate{footline}[Warsaw]
+\setbeamertemplate{headline}{}
+\setbeamertemplate{page number in head/foot}[totalframenumber]
+\setbeamertemplate{navigation symbols}{}
+
+\lstset{basicstyle=\ttfamily\footnotesize,keywordstyle=\color{magenta},tabsize=2,escapeinside=||,mathescape=true}
+
+\usetikzlibrary{positioning,overlay-beamer-styles,graphs,fit,shapes}
+\tikzset{}
+
+\AtBeginSection[] {
+  \begin{frame}{\secname}
+    \tableofcontents[currentsection,hideothersubsections,sectionstyle=hide]
+  \end{frame}
+}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}
+  \frametitle{Spis treści}
+  \tableofcontents[hideallsubsections]
+\end{frame}
+
+% \subfile{sub/lca.tex}
+% \subfile{sub/mst.tex}
+% \subfile{sub/dsu.tex}
+% \subfile{sub/toposort.tex}
+% \subfile{sub/scc.tex}
+% \subfile{sub/dijkstra.tex}
+% \subfile{sub/low.tex}
+\subfile{sub/segtree.tex}
+
+\end{document}
